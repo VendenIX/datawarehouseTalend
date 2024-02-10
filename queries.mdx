@@ -1,0 +1,139 @@
+-- Nos requêtes pour le TP Olap --
+-- Chiffre d'affaires par mois
+--SELECT [Date de début].[Standard].[Mois].MEMBERS ON COLUMNS, [Measures].[CA] ON ROWS
+--FROM Ventes
+
+
+-- Chiffre d'affaires cumulé sur les mois de janvier et février 2020
+--SELECT [Measures].[CA] ON 0
+--FROM Ventes
+--WHERE ({[Date de début].[Année].[2020].[1], [Date de début].[Année].[2020].[2]})
+
+-- Chiffre d'affaires pour les mois de janvier et février 2020
+--SELECT [Measures].[CA] ON 0, {[Date de début].[Année].[2020].[1], [Date de début].[Année].[2020].[2]} ON 1
+--FROM Ventes
+
+-- Que constate qu'on => on doit avoir des irrégularités ( sinon ca doit être uniforme)
+
+-- Exercice 2  Écrire une requête MDX permettant de visualiser le chiffre d’affaires total (somme des prix des ventes), sur l’ensemble des ventes.
+--SELECT [Measures].[CA] ON COLUMNS
+--FROM Ventes 
+
+-- Exercice 3 Écrire une requête permettant de visualiser le chiffre d’affaires total par mois, les mois étant affichés en toutes lettres.
+--SELECT [Measures].[CA] ON ROWS, [Date de début].[Standard].[Mois].MEMBERS ON COLUMNS
+--FROM Ventes
+
+
+-- Exercice 4 Écrire une requête permettant de visualiser le chiffre d’affaires total par mois, les mois étant affichés en toutes lettres, pour les régions Normandie et Bretagne.
+--SELECT [Mois].MEMBERS ON 0 , {[Région].[BRETAGNE],[Région].[Normandie]}ON 1
+--FROM VENTES
+
+-- Exercice 5 Écrire une requête permettant de visualiser le chiffre d’affaires total par mois, les mois étant affichés en toutes lettres et les ventes étant cumulées seulement sur celles ayant eu lieu dans les régions Normandie et Bretagne.
+--SELECT  [Mois].MEMBERS ON COLUMNS, [Measures].[CA] ON ROWS 
+--FROM VENTES
+--WHERE {[Région].[BRETAGNE],[Région].[Normandie]}
+
+-- Exercice 6 Écrire une requête permettant de visualiser le chiffre d’affaires et le nombre de ventes par heure de la journée (cumulés sur toute la période). Par exemple, on voudrait pouvoir visualiser le nombre total de ventes réalisés à 4 h du matin, sur tout l’historique. Qu’observe-t-on en exécutant la requête ?
+-- Indication : Il faudra définir des hiérarchies dédiées.
+--SELECT {[Measures].[CA],[Measures].[Nombre de ventes]} ON ROWS, {[Date de début].[Heure].MEMBERS}  ON COLUMNS
+--FROM VENTES 
+-- On peut voir que la requête est longue à s'éxécuter en raison du nombre d'éléments par dimensions, il faudrait donc limiter le nombre d'éléments par dimension si on veut un résultat rapide
+
+-- Exercice 7
+--Écrire de même une requête pour les jours du mois. Par exemple, on voudrait pouvoir
+--visualiser le nombre total de ventes réalisés un 15 du mois, sur tout l’historique. Qu’observe-t-on en
+--exécutant la requête ?
+--SELECT {[Measures].[CA],[Measures].[Nombre de ventes]} ON ROWS, {[Analyse par jours].[Jour].MEMBERS}  ON COLUMNS
+--FROM VENTES
+
+-- Exercice 8 
+--Écrire une requête permettant de visualiser les nombres de ventes, en fonction de la région
+--du client et de celle où la prestation a été réalisée. Qu’observe-t-on en exécutant la requête ?
+--SELECT {[Measures].[Nombre de ventes]} ON ROWS, {[Région].[BRETAGNE],[Région].[Normandie]} ON COLUMNS
+--FROM VENTES
+
+-- Exercice 9
+--Écrire une requête permettant de visualiser le nombre et le prix moyen des ventes par
+--département. Qu’observe-t-on en exécutant la requête ?
+--SELECT {[Measures].[Nombre de ventes],[Measures].[Prix de vente moyen]} ON ROWS, {[Département].MEMBERS} ON COLUMNS
+--FROM VENTES
+
+-- Exercice 10
+--Écrire une requête permettant de visualiser le nombre et le prix moyen des prestations
+--réalisées en Normandie, et le nombre et le prix moyen de celles réalisées en Bretagne, pour chaque
+--trimestre de 2020
+--SELECT 
+--  {[Date de début].[Standard].[Année].[2020].Children} ON COLUMNS,
+--  {[Measures].[Nombre de ventes], [Measures].[Prix de vente moyen]} ON ROWS
+--FROM [Ventes]
+--WHERE { 
+--  [Localisation].[Standard].[Région].[Normandie], 
+--  [Localisation].[Standard].[Région].[Bretagne] 
+--}
+
+-- Exercice 11
+--Écrire une requête permettant de visualiser les durées moyennes d’intervention, en fonction
+--de la catégorie de prestation, de la région où la prestation a été réalisée, et du trimestre.
+--SELECT 
+--    {[Measures].[Durée moyenne d'intervention]} ON 3, 
+--    [Région].MEMBERS ON 2, 
+--    [Trimestre].MEMBERS ON 0,
+--    [Catégorie].MEMBERS ON 1
+--FROM Ventes
+
+--------------------------------------------------------------------------------------------------------------------------------
+-- (BONUS) 
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+-- Durée maximale d'intervention par régions, trimestre et catégorie
+--SELECT {[Measures].[Durée max d'intervention]} ON 3, [Région].Members ON 1, [Trimestre].Members ON 2, [Catégorie].Members ON 0
+--FROM Ventes
+
+
+-- Analyse par région et par année du CA 
+--SELECT 
+--  [Measures].[CA] ON ROWS, 
+--  [Date de début].[Standard].[Année].MEMBERS ON PAGES, 
+--  [Localisation].[Standard].[Région].MEMBERS ON COLUMNS 
+--FROM Ventes
+
+
+-----------------------
+--Analyse par client--
+-----------------------
+
+-- Correct mais prend beaucoup de temps à s'éxecuter en raison du nombre de clients, il faudrait donc limiter le nombre de clients
+-- *  c'est pour combiner les membres des niveaux Nom et Ville des deux hiérarchies différentes ParNom et ParVille enfaite
+-- Chiffre d'affaires par client et par ville
+--SELECT 
+--  [Measures].[CA] ON COLUMNS, 
+--  [Client].[ParNom].[Nom].MEMBERS * [Client].[ParVille].[Ville].MEMBERS ON ROWS 
+--FROM Ventes
+
+
+-- Alternative sur une partition plus petite, grâce à TOPCOUNT on limite le nombre de membre par dimension à 10
+--SELECT 
+--  [Measures].[CA] ON ROWS, 
+--  TOPCOUNT([Client].[ParNom].[Nom].MEMBERS, 10, [Measures].[CA]) * 
+--  TOPCOUNT([Client].[ParVille].[Ville].MEMBERS, 10, [Measures].[CA]) ON COLUMNS
+--FROM Ventes 
+--WHERE [Date de début].[Année].&[2021]
+
+
+------------------------
+--Analyse temporelle--
+------------------------
+
+-- Nombre de ventes par heure de la journée sur 2019, 2020 et 2021
+--SELECT [Measures].[Nombre de ventes] ON ROWS, [Date de début].[Heure].MEMBERS ON COLUMNS
+--FROM Ventes
+
+-----------------------------------
+--Analyse par type de prestation--
+-----------------------------------
+
+--SELECT 
+--  [Measures].[CA] ON ROWS, 
+--  [Prestation].[ParCategorie].[Catégorie].MEMBERS * [Prestation].[ParType].[Type].MEMBERS ON COLUMNS
+--FROM Ventes
